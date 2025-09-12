@@ -5,7 +5,7 @@ final DateTime dateTime;
 
   WaterModel({this.id, required this.amount, required String unit,required this.dateTime});
 
-
+//Covert JSON Data from firebase to WaterModel
 factory WaterModel.fromJson(Map<String,dynamic>json, String id )
 {
   return WaterModel(
@@ -16,6 +16,7 @@ factory WaterModel.fromJson(Map<String,dynamic>json, String id )
     );
 }
 
+//Convert water model to JSON to save data in Firebase
 Map<String,dynamic> toJson()
 {
   return{
