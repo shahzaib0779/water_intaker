@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:water_intaker/data/water_data.dart';
 import 'package:water_intaker/model/water_model.dart';
+import 'package:water_intaker/widgets/water_tile.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,7 +24,8 @@ class _HomePageState extends State<HomePage> {
 
   void saveWater() async{
 
-    Provider.of<WaterData>(context,listen: false).saveWater(WaterModel(amount: double.parse(amountController.text),
+    Provider.of<WaterData>(context,listen: false).
+    saveWater(WaterModel(amount: double.parse(amountController.text),
      unit: 'ml',
     dateTime: DateTime.now()));
 
@@ -31,6 +33,8 @@ class _HomePageState extends State<HomePage> {
     {
       return; //Do nothing if not mounted
     }
+
+    clearWater();
   }
 
   void addWater(){
@@ -64,7 +68,8 @@ class _HomePageState extends State<HomePage> {
         //We are going to save data in db here :)
        saveWater();
         Navigator.pop(context);
-        SnackBar snackBar = SnackBar(content: Text("Water Amount Saved!"),backgroundColor: Theme.of(context).colorScheme.primary,duration: Duration(seconds: 1),);
+        SnackBar snackBar = SnackBar(content: Text("Water Amount Saved!"),
+        backgroundColor: Theme.of(context).colorScheme.primary,duration: Duration(seconds: 1),);
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
 
       }, child: Text("Save")),
@@ -90,13 +95,8 @@ class _HomePageState extends State<HomePage> {
         body: ListView.builder(
           itemCount: value.waterDataList.length,
           itemBuilder:(context, index) {
-            final WaterObject = value.waterDataList[index];
-            return ListTile(
-              title: Text(WaterObject.amount.toString()),
-              subtitle: Text(WaterObject.id.toString()),
-            );
-
-
+            final waterObject = value.waterDataList[index];
+            return waterTile(waterObject: waterObject);
         } ),
         backgroundColor: Theme.of(context).colorScheme.surface,
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -105,5 +105,10 @@ class _HomePageState extends State<HomePage> {
         child: Icon(Icons.add)),
       ),
     );
+  }
+  
+  void clearWater() {
+
+    amountController.clear();
   }
 }
