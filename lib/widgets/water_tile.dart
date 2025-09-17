@@ -14,7 +14,7 @@ class waterTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 4,
+      elevation: 5,
       child: ListTile(
         title: Row(
           children: [
@@ -22,7 +22,7 @@ class waterTile extends StatelessWidget {
             Text("${waterObject.amount.toStringAsFixed(2)} ml",style: Theme.of(context).textTheme.titleMedium,),
           ],
         ),
-        subtitle: Text("${waterObject.dateTime.day}/${waterObject.dateTime.month}"),
+        subtitle: Text("${waterObject.dateTime.day}/${waterObject.dateTime.month}/${waterObject.dateTime.year}"),
         trailing: IconButton(onPressed:(){
           Provider.of<WaterData>(context,listen: false).delete(waterObject);
         }, icon: Icon(Icons.delete)),

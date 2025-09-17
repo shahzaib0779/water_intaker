@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:water_intaker/data/water_data.dart';
 import 'package:water_intaker/model/water_model.dart';
+import 'package:water_intaker/widgets/water_intake_summary.dart';
 import 'package:water_intaker/widgets/water_tile.dart';
 
 class HomePage extends StatefulWidget {
@@ -13,11 +14,37 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
+  bool isLoading = true;
+  bool isError = false;
+
   @override
   void initState() {
     
-    Provider.of<WaterData>(context,listen: false).getWater();
+    loadingWater();
     super.initState();
+  }
+
+  void loadingWater() async
+  {
+   await Provider.of<WaterData>(context,listen: false).getWater().then((waters)=> {
+
+    if(waters.isNotEmpty)
+    {
+      setState(() {
+        isLoading =false;
+      })
+    }
+
+    else
+    {
+      setState(() {
+        isLoading =true;
+      })
+
+    }
+   });
+
+
   }
 
   final amountController = TextEditingController();
@@ -48,9 +75,11 @@ class _HomePageState extends State<HomePage> {
           Text("Add water to your daily intake"),
           SizedBox(height: 10,),
           TextField(
+            
             controller: amountController,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
+              errorText: isError? "Please enter value to save" : null,
               border: OutlineInputBorder(
                 
               ),
@@ -66,11 +95,26 @@ class _HomePageState extends State<HomePage> {
       }, child: Text("Cancel")),
       TextButton(onPressed: (){
         //We are going to save data in db here :)
+
+      if(amountController.text.isEmpty)
+      {
+        setState(() {
+          isError =true;
+        });
+      } else{
+        setState(() {
+          isError = false;
+        });
+      }
+  
+       if(isError == false)
+       {
        saveWater();
         Navigator.pop(context);
         SnackBar snackBar = SnackBar(content: Text("Water Amount Saved!"),
         backgroundColor: Theme.of(context).colorScheme.primary,duration: Duration(seconds: 1),);
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
+       }
 
       }, child: Text("Save")),
       
@@ -84,7 +128,6 @@ class _HomePageState extends State<HomePage> {
       builder: (context, value, child) =>
       Scaffold(
         appBar: AppBar(
-          elevation: 8,
           actions: [
             IconButton(onPressed: (){}, icon: Icon(Icons.car_crash))
           ],
@@ -92,12 +135,22 @@ class _HomePageState extends State<HomePage> {
           title: Text("Water"),
         ),
 
-        body: ListView.builder(
-          itemCount: value.waterDataList.length,
-          itemBuilder:(context, index) {
-            final waterObject = value.waterDataList[index];
-            return waterTile(waterObject: waterObject);
-        } ),
+        body: ListView(
+          children:[
+
+            WaterIntakeSummary(startOfWeek: value.getStartOfWeek()),
+            //Water Amount in Database
+            !isLoading? ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+            itemCount: value.waterDataList.length,
+            itemBuilder:(context, index) {
+              final waterObject = value.waterDataList[index];
+              return waterTile(waterObject: waterObject);
+          } ) : Center(child: Column(mainAxisAlignment:MainAxisAlignment.center,spacing: 3,
+          children: [CircularProgressIndicator(),Text("Loading Data...")],)),
+          ]
+        ),
         backgroundColor: Theme.of(context).colorScheme.surface,
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: FloatingActionButton(
