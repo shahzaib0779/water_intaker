@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:water_intaker/model/water_model.dart';
+import 'package:water_intaker/utils/date_helper.dart';
 
 class WaterData extends ChangeNotifier {
 
@@ -40,8 +41,15 @@ class WaterData extends ChangeNotifier {
       waterDataList.clear();
 
       //We are good to go
-      final extractedData = json.decode(response.body) as Map<String,dynamic>;
-      for (var element in extractedData.entries) {
+      final extractedData = json.decode(response.body);
+
+      if(extractedData==null)
+      {
+        return waterDataList;
+      }
+
+      final dataMap = extractedData as Map<String,dynamic>;
+      for (var element in dataMap.entries) {
         waterDataList.add
         (WaterModel(
         id: element.key,
@@ -95,12 +103,50 @@ DateTime getStartOfWeek()
 
   for(int i=1;i<=7;i++){
     
-    if(getWeekDay(dateTime.subtract(Duration(days: i)))== 'Sun'){
+    if(getWeekDay(dateTime.subtract(Duration(days: i))) == 'Sun'){
       startOfWeek = dateTime.subtract(Duration(days: i));
     }
   }
 
   return startOfWeek!;
 }
+
+//Calculate weekly water intake
+String CalculateWeeklyWaterIntake(WaterData water)
+{
+  double totalWaterAmount = 0;
+
+  for(var water in water.waterDataList){
+    totalWaterAmount = totalWaterAmount + double.parse(water.amount.toString());
+  }
+
+  return totalWaterAmount.toStringAsFixed(2);
+
 }
 
+Map<String,double> calculateDailyWaterSummary()
+{
+  Map<String,double> dailyWaterIntake ={};
+
+  for(var water in waterDataList)
+  {
+    String dateTime = convertDateTimeToString(water.dateTime);
+    double amount = double.parse( water.amount.toString()) ;
+
+       if(dailyWaterIntake.containsKey(dateTime))
+       {
+        double currentAmount = dailyWaterIntake[dateTime]!;
+        currentAmount =currentAmount + amount;
+
+        dailyWaterIntake[dateTime] =currentAmount;
+       }
+       else
+       {
+        dailyWaterIntake.addAll({dateTime:amount});
+       }
+  }
+
+  return dailyWaterIntake;
+}
+
+}

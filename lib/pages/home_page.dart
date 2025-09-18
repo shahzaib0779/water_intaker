@@ -24,28 +24,28 @@ class _HomePageState extends State<HomePage> {
     super.initState();
   }
 
-  void loadingWater() async
-  {
-   await Provider.of<WaterData>(context,listen: false).getWater().then((waters)=> {
+ void loadingWater() async {
+  setState(() {
+    isLoading = true;
+  });
 
-    if(waters.isNotEmpty)
-    {
-      setState(() {
-        isLoading =false;
-      })
+  try {
+    final waters = await Provider.of<WaterData>(context, listen: false).getWater();
+
+    setState(() {
+      isLoading = false;
+    });
+
+    if (waters.isEmpty) {
+      debugPrint("No water data found.");
     }
-
-    else
-    {
-      setState(() {
-        isLoading =true;
-      })
-
-    }
-   });
-
-
+  } catch (e) {
+    setState(() {
+      isLoading = false;
+    });
+    debugPrint("Error fetching water data: $e");
   }
+}
 
   final amountController = TextEditingController();
 
@@ -124,6 +124,7 @@ class _HomePageState extends State<HomePage> {
   }
   @override
   Widget build(BuildContext context) {
+
     return Consumer<WaterData>(
       builder: (context, value, child) =>
       Scaffold(
@@ -132,7 +133,14 @@ class _HomePageState extends State<HomePage> {
             IconButton(onPressed: (){}, icon: Icon(Icons.car_crash))
           ],
           centerTitle: true,
-          title: Text("Water"),
+
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text("Weekly: ",style: Theme.of(context).textTheme.titleMedium,),
+            Text('${value.CalculateWeeklyWaterIntake(value)}ml',style: Theme.of(context).textTheme.titleMedium,),
+          ],
+        ),
         ),
 
         body: ListView(
@@ -140,15 +148,23 @@ class _HomePageState extends State<HomePage> {
 
             WaterIntakeSummary(startOfWeek: value.getStartOfWeek()),
             //Water Amount in Database
-            !isLoading? ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-            itemCount: value.waterDataList.length,
-            itemBuilder:(context, index) {
-              final waterObject = value.waterDataList[index];
-              return waterTile(waterObject: waterObject);
-          } ) : Center(child: Column(mainAxisAlignment:MainAxisAlignment.center,spacing: 3,
-          children: [CircularProgressIndicator(),Text("Loading Data...")],)),
+
+            value.waterDataList.isNotEmpty?
+            !isLoading? Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+              itemCount: value.waterDataList.length,
+              itemBuilder:(context, index) {
+                final waterObject = value.waterDataList[index];
+                return waterTile(waterObject: waterObject);
+                        } ),
+            ) : Center(child: Column(mainAxisAlignment:MainAxisAlignment.center,spacing: 3,
+          children: [CircularProgressIndicator(),Text("Loading Data...")],)):Center(child: Padding(
+            padding: const EdgeInsets.only(top:100),
+            child: Text("No water data found"),
+          ),)
           ]
         ),
         backgroundColor: Theme.of(context).colorScheme.surface,
