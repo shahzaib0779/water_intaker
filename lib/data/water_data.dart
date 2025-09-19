@@ -8,6 +8,8 @@ import 'package:water_intaker/utils/date_helper.dart';
 class WaterData extends ChangeNotifier {
 
   List<WaterModel> waterDataList=[];
+  double _dailyTarget = 3700.0; // default
+
 
   //Add Water
    void saveWater(WaterModel water) async{
@@ -148,5 +150,11 @@ Map<String,double> calculateDailyWaterSummary()
 
   return dailyWaterIntake;
 }
+  double get dailyTarget => _dailyTarget;
+
+  void updateDailyTarget(double target) {
+    _dailyTarget = target;
+    notifyListeners();
+  }
 
 }
